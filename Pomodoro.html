@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Pomodoro Timer</title>
+
+  <style>
+    * {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+  }
+  body {
+    background-color: #cd202d;
+  }
+  .container {
+    background-color: #1b1b1b;
+    width: min(90%, 500px);
+    position: absolute;
+    transform: translate(-50%, -50%);
+    top: 50%;
+    left: 50%;
+    padding: 4em 2em;
+    border-radius: 0.5em;
+  }
+  button {
+    border: none;
+    outline: none;
+    cursor: pointer;
+  }
+  .section-container {
+    display: flex;
+    gap: 1em;
+    justify-content: center;
+  }
+  .btn {
+    padding: 1em 2em;
+    border-radius: 0.5em;
+    background-color: #3e3f43;
+    color: #a9a7a7;
+  }
+  .btn-focus {
+    background-color: #cb202d;
+    color: #ffffff;
+  }
+  .time-btn-container {
+    display: flex;
+    flex-direction: column;
+    margin-top: 2em;
+  }
+  #time {
+    text-align: center;
+    color: #ffffff;
+    font-size: 5em;
+    font-weight: 600;
+  }
+  .btn-container {
+    display: flex;
+    justify-content: center;
+    gap: 2em;
+  }
+  #btn-start,
+  #btn-pause {
+    padding: 1em 2em;
+    border-radius: 0.5em;
+    cursor: pointer;
+    background-color: #ffffff;
+  }
+  #btn-reset {
+    background-color: transparent;
+    border: none;
+    outline: none;
+    color: #ffffff;
+    font-size: 2em;
+  }
+  .hide {
+    display: none;
+  }
+  .show {
+    display: block;
+  }
+  
+  .custom-time-container {
+    justify-content: center;
+    display: flex;
+    margin-top: 1em;
+  }
+  
+  #set-time-input {
+    padding: 0.5em;
+    border: 1px solid #ffffff;
+    border-radius: 0.5em;
+    margin-right: 0.5em;
+    width: 85px; /* Adjust as needed */
+    color: #ffffff;
+    background-color: transparent;
+  }
+  
+  #set-time {
+    padding: 0.5em 1em;
+    border: none;
+    border-radius: 0.5em;
+    cursor: pointer;
+    background-color: #cb202d;
+    color: #ffffff;
+  }
+  </style>
+
+</head>
+<body>
+  <div class="container">
+    <div class="section-container">
+      <button class="btn btn-timer btn-focus" id="focus">Focus</button>
+      <button class="btn btn-shortbreak" id="shortbreak">Short Break</button>
+      <button class="btn btn-longbreak" id="longbreak">Long Break</button>
+    </div>
+    
+    <div class="time-btn-container">
+      <span id="time"></span>
+      <div class="btn-container">
+        <button class="show" id="btn-start">Start</button>
+        <button class="hide" id="btn-pause">Pause</button>
+        <button class="hide" id="btn-reset">
+          <i class="fa-solid fa-rotate-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Custom Time Setting -->
+     <div class="custom-time-container">
+        <input id="set-time-input" placeholder="Custom Time (minutes)" type="number" />
+        <button id="set-time">Set Time</button>
+  </div>
+ </div>
+  <!-- Script -->
+
+  <script>
+    let focusButton = document.getElementById("focus");
+let buttons = document.querySelectorAll(".btn");
+let shortBreakButton = document.getElementById("shortbreak");
+let longBreakButton = document.getElementById("longbreak");
+let startBtn = document.getElementById("btn-start");
+let reset = document.getElementById("btn-reset");
+let pause = document.getElementById("btn-pause");
+let time = document.getElementById("time");
+let set;
+let active = "focus";
+let count = 59;
+let paused = true;
+let minCount = 24;
+time.textContent = `${minCount + 1}:00`;
+
+const appendZero = (value) => {
+  value = value < 10 ? `0${value}` : value;
+  return value;
+};
+
+reset.addEventListener(
+  "click",
+  (resetTime = () => {
+    pauseTimer();
+    switch (active) {
+      case "long":
+        minCount = 14;
+        break;
+      case "short":
+        minCount = 4;
+        break;
+      default:
+        minCount = 24;
+        break;
+    }
+    count = 59;
+    time.textContent = `${minCount + 1}:00`;
+  })
+);
+
+const removeFocus = () => {
+  buttons.forEach((btn) => {
+    btn.classList.remove("btn-focus");
+  });
+};
+
+focusButton.addEventListener("click", () => {
+  removeFocus();
+  focusButton.classList.add("btn-focus");
+  pauseTimer();
+  minCount = 24;
+  count = 59;
+  time.textContent = `${minCount + 1}:00`;
+});
+
+shortBreakButton.addEventListener("click", () => {
+  active = "short";
+  removeFocus();
+  shortBreakButton.classList.add("btn-focus");
+  pauseTimer();
+  minCount = 4;
+  count = 59;
+  time.textContent = `${appendZero(minCount + 1)}:00`;
+});
+
+longBreakButton.addEventListener("click", () => {
+  active = "long";
+  removeFocus();
+  longBreakButton.classList.add("btn-focus");
+  pauseTimer();
+  minCount = 14;
+  count = 59;
+  time.textContent = `${minCount + 1}:00`;
+});
+
+pause.addEventListener(
+  "click",
+  (pauseTimer = () => {
+    paused = true;
+    clearInterval(set);
+    startBtn.classList.remove("hide");
+    pause.classList.remove("show");
+    reset.classList.remove("show");
+  })
+);
+
+startBtn.addEventListener("click", () => {
+  reset.classList.add("show");
+  pause.classList.add("show");
+  startBtn.classList.add("hide");
+  startBtn.classList.remove("show");
+  if (paused) {
+    paused = false;
+    time.textContent = `${appendZero(minCount)}:${appendZero(count)}`;
+    startTimer();
+  }
+});
+
+const startTimer = () => {
+  set = setInterval(() => {
+    count--;
+    time.textContent = `${appendZero(minCount)}:${appendZero(count)}`;
+    if (count === 0) {
+      if (minCount !== 0) {
+        minCount--;
+        count = 60;
+      } else {
+        clearInterval(set);
+      }
+    }
+  }, 1000);
+};
+
+// Custom Time Setting Function
+// ... (previous JavaScript code) ...
+
+let setTimeButton = document.getElementById("set-time");
+let setTimeInput = document.getElementById("set-time-input");
+
+setTimeButton.addEventListener("click", () => {
+  let newMinCount = parseInt(setTimeInput.value);
+  
+  // Check if the input is a valid number
+  if (!isNaN(newMinCount) && newMinCount > 0) {
+    minCount = newMinCount - 1; // Subtract 1 because the timer displays minCount + 1
+    count = 59;
+    time.textContent = `${appendZero(minCount + 1)}:00`;
+
+    // Reset the active button styling
+    removeFocus();
+
+    // Resume the timer if it was paused
+    if (!paused) {
+      paused = false;
+      startTimer();
+    }
+  } else {
+    alert("Please enter a valid positive number for the timer.");
+  }
+});
+
+// ... (remaining JavaScript code) ...
+
+// Add this line to start the timer initially
+// startTimer(); // Commented out to prevent automatic start
+
+
+    // Additional script to set custom time when the "Set Time" button is clicked
+    document.getElementById("set-custom-time").addEventListener("click", () => {
+      setCustomTime();
+    });
+  </script>
+  
+</body>
+</html>
